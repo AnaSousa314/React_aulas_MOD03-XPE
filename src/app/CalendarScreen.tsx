@@ -12,6 +12,9 @@ import {
   Button,
   FormControlLabel,
   Checkbox,
+  Icon,
+  IconButton,
+  Avatar,
 } from "@material-ui/core";
 
 const DAYS_OF_WEEK = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
@@ -22,6 +25,7 @@ const useStyles = makeStyles({
   },
   table: {
     minHeight: "100%",
+    borderTop: "1px solid rgb(244, 244, 244)",
     "& td ~ td, & th ~ th": {
       borderLeft: "1px solid rgb(244, 244, 244)",
     },
@@ -54,6 +58,26 @@ export default function CalendarScreen() {
         </Box>
 
         <TableContainer className={classes.root} component={"div"}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" padding="8px 16px">
+            <Box flex="1">
+              <IconButton aria-label="Próximo Mês">
+                <Icon>chevron_left</Icon>
+              </IconButton>
+              <Box component="strong" margin="16px">Junho de 2021</Box>
+              <IconButton aria-label="Mês Anterior">
+                <Icon>chevron_right</Icon>
+              </IconButton>
+            </Box>
+
+            {/* <Box flex="1" component="h3" margin="16px">Junho de 2021</Box> versão do professor aula 3.4 min 12:57*/}
+            <Box>
+              <IconButton aria-label="Usuário">
+                <Avatar>
+                  <Icon>person</Icon>
+                </Avatar>
+              </IconButton>
+            </Box>
+          </Box>
           <Table
             className={classes.table}
             size="small"
