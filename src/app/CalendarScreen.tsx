@@ -34,6 +34,7 @@ const useStyles = makeStyles({
 
 export default function CalendarScreen() {
   const classes = useStyles();
+  const weeks = generateCalendar(getToday());
 
   return (
     <>
@@ -95,37 +96,58 @@ export default function CalendarScreen() {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                {DAYS_OF_WEEK.map((day) => {
-                  return (
-                    <TableCell key={day} align="center">
-                      X
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-              <TableRow>
-                {DAYS_OF_WEEK.map((day) => {
-                  return (
-                    <TableCell key={day} align="center">
-                      X
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-              <TableRow>
-                {DAYS_OF_WEEK.map((day) => {
-                  return (
-                    <TableCell key={day} align="center">
-                      X
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
+              {weeks.map((week, index) => (
+                 <TableRow key={index}>
+                 {week.map((cell) => {
+                   return (
+                     <TableCell key={cell.date} align="center">
+                      {cell.date}
+                     </TableCell>
+                   );
+                 })}
+               </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
     </>
   );
+}
+
+interface ICalendarCell {
+  date: string
+}
+
+function generateCalendar(date: string): ICalendarCell[][] {
+  const weeks: ICalendarCell[][] = [];
+  const jsDate = new Date(date + "T10:00:00");
+  const currentMonth = jsDate.getMonth();
+
+
+  const currentDay = new Date(jsDate.valueOf());
+  currentDay.setDate(1);
+  const dayOfWeek = currentDay.getDay();
+  currentDay.setDate(1 - dayOfWeek);
+
+
+  do {
+    const week: ICalendarCell[] = [];
+    for (let i =0; i < DAYS_OF_WEEK.length; i++){
+      const monthStr = (currentDay.getMonth() + 1).toString().padStart(2,"0");
+      const dayStr = (currentDay.getDate()).toString().padStart(2, "0");
+
+     const isoDate = `${currentDay.getFullYear()}-${monthStr}-${dayStr}`;
+     week.push({date: isoDate});
+     currentDay.setDate(currentDay.getDate() + 1);
+    }
+    weeks.push(week);
+    ;
+  } while (currentDay.getMonth() === currentMonth);
+
+  return weeks;
+}
+
+function getToday() {
+  return "2021-06-17";
 }
