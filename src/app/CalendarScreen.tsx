@@ -16,7 +16,7 @@ import {
   IconButton,
   Avatar,
 } from "@material-ui/core";
-import { IEvent, getEventsEndpoint } from "./backend";
+import { ICalendar, IEvent, getCalendarsEndpoint, getEventsEndpoint } from "./backend";
 
 const DAYS_OF_WEEK = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
@@ -51,17 +51,30 @@ const useStyles = makeStyles({
     whiteSpace: "nowrap",
     margin: "4px 0px",
   },
+  eventBackground: {
+    display: "inline-block",
+    color: "white",
+    padding: "2px",
+    borderRadius: "4px"
+  }
 });
 
 export default function CalendarScreen() {
   const classes = useStyles();
   const [events, setEvents] = useState<IEvent[]>([]);
-  const weeks = generateCalendar(getToday(), events);
+  const [calendars, setCalendars] = useState<ICalendar[]>([]);
+  const weeks = generateCalendar(getToday(), events, calendars);
   const firstDate = weeks[0][0].date;
   const lastDate = weeks[weeks.length - 1][6].date;
 
   useEffect(() => {
-    getEventsEndpoint(firstDate, lastDate).then(setEvents);
+    Promise.all([getCalendarsEndpoint(), 
+      getEventsEndpoint(firstDate, lastDate)
+    ]).then(
+      ([calendars, events]) =>{
+        setCalendars(calendars);
+        setEvents(events);
+      })
   }, [firstDate, lastDate]);
 
   return (
@@ -140,19 +153,23 @@ export default function CalendarScreen() {
                           {cell.dayOfMonth}
                         </div>
 
-                        {cell.events.map((event) => (
+                        {cell.events.map((event) => {
+                          const color = event.calendar.color;
+
+                          return(
                           <button className={classes.eventss}>
                             {event.time && (
-                              <Icon fontSize="inherit">watch_later</Icon>
+                              <>
+                                <Icon style={{color}} fontSize="inherit">watch_later</Icon>
+                                <Box component="span" margin="0 4px">
+                                  {event.time}
+                                </Box>
+                              </>
                             )}
-                            {event.time && (
-                              <Box component="span" margin="0 4px">
-                                {event.time}
-                              </Box>
-                            )}
-                            <span>{event.desc}</span>
+                            {event.time ? <span>{event.desc}</span> : <span className={classes.eventBackground} style={{backgroundColor: color}}>{event.desc}</span>}
+                            
                           </button>
-                        ))}
+                        )})}
                       </TableCell>
                     );
                   })}
@@ -169,12 +186,13 @@ export default function CalendarScreen() {
 interface ICalendarCell {
   date: string;
   dayOfMonth: number;
-  events: IEvent[];
+  events: (IEvent & {calendar: ICalendar})[];
 }
 
 function generateCalendar(
   date: string,
-  allEvents: IEvent[]
+  allEvents: IEvent[],
+  calendars: ICalendar[]
 ): ICalendarCell[][] {
   const weeks: ICalendarCell[][] = [];
   const jsDate = new Date(date + "T10:00:00");
@@ -196,7 +214,10 @@ function generateCalendar(
       week.push({
         dayOfMonth: currentDay.getDate(),
         date: isoDate,
-        events: allEvents.filter((e) => e.date === isoDate),
+        events: allEvents.filter((e) => e.date === isoDate).map(e => {
+          const calendar = calendars.find(cal => cal.id === e.calendarId)!;
+          return {...e, calendar}
+        }),
       });
       currentDay.setDate(currentDay.getDate() + 1);
     }
